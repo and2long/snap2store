@@ -1,7 +1,7 @@
 
 [project]
 name = "snap2store"
-version = "0.1.0"
+version = "0.1.1"
 description = "Auto add device frames to iOS/iPadOS screenshots for App Store."
 authors = [
 	{ name = "Lilong Zhang", email = "and2long@gmail.com" }
