@@ -37,7 +37,7 @@ pip install snap2store
 
 ### Typical Workflow
 
-1. **Capture screenshots** in the iOS simulator  
+1. **Capture screenshots** in the iOS simulator (select the `iPhone 17 Pro Max` or `iPad Pro 13-inch` simulator so the raw captures match Apple’s current App Store device requirements)  
 2. **Run the processing tool** for the target device  
 3. **Get processed screenshots** with the correct frame and size  
 4. **Upload directly** to App Store Connect  

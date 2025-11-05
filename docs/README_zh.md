@@ -24,7 +24,7 @@ pip install snap2store
 
 ### 典型工作流程
 
-1. **从模拟器截屏** - 在 iOS 模拟器中截取应用界面
+1. **从模拟器截屏** - 在 iOS 模拟器中截取应用界面（请选择 `iPhone 17 Pro Max` 或 `iPad Pro 13-inch` 模拟器，确保原始截图满足最新 App Store 设备要求）
 2. **运行处理工具** - 使用对应设备的脚本
 3. **获得成品** - 得到符合 App Store 规范的截屏图片
 4. **直接上传** - 可直接用于 App Store Connect
