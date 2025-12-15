@@ -17,7 +17,11 @@
 ## 安装
 
 ```bash
-pip install snap2store
+# 使用 pip
+pip install -U snap2store
+
+# 或使用 uv
+uv tool install snap2store
 ```
 
 ## 使用方法

@@ -6,6 +6,7 @@ from typing import List, Optional
 from PIL import Image
 
 from snap2store.ipad_batch import process_image as process_ipad
+from snap2store.ipad_mini_batch import process_image as process_ipad_mini
 from snap2store.iphone_batch import process_image as process_iphone
 
 
@@ -15,14 +16,16 @@ def is_landscape(img):
     return width > height
 
 
-def is_ipad_screenshot(image_path):
-    """Determine if screenshot is from iPad (based on aspect ratio)
+def detect_device_type(image_path):
+    """Determine device type based on image resolution and aspect ratio
 
-    iPad aspect ratio is approximately 4:3 (1.33)
-    iPhone aspect ratio is approximately 9:19.5 (0.46)
+    iPad mini: 1488 × 2266 (exact match)
+    iPad Pro 13: aspect ratio approximately 4:3 (0.75)
+    iPhone: aspect ratio approximately 9:19.5 (0.46)
 
     Returns:
-        (bool, bool): (is_ipad, is_landscape)
+        (str, bool): (device_type, is_landscape)
+        device_type: 'ipad_mini', 'ipad', 'iphone'
     """
     try:
         with Image.open(image_path) as img:
@@ -31,26 +34,32 @@ def is_ipad_screenshot(image_path):
             # Check if landscape
             landscape = is_landscape(img)
 
-            # If landscape, swap width and height for ratio calculation
-            if landscape:
-                aspect_ratio = height / width
-            else:
-                aspect_ratio = width / height
+            # Normalize to portrait orientation for comparison
+            portrait_width = min(width, height)
+            portrait_height = max(width, height)
+
+            # Check for iPad mini exact resolution (1488 × 2266)
+            if portrait_width == 1488 and portrait_height == 2266:
+                return 'ipad_mini', landscape
+
+            # Calculate aspect ratio in portrait orientation
+            aspect_ratio = portrait_width / portrait_height
 
             # iPad aspect ratio is close to 3:4 (0.75), iPhone is close to 9:19.5 (0.46)
             # Use 0.6 as threshold for distinction
-            is_ipad = aspect_ratio > 0.6
-
-            return is_ipad, landscape
+            if aspect_ratio > 0.6:
+                return 'ipad', landscape
+            else:
+                return 'iphone', landscape
     except Exception as e:
         print(f"❌ Error reading image: {e}")
-        return False, False
+        return 'unknown', False
 
 
 def process_auto(image_path, device=None, output_dir="output"):
     """Automatically process screenshot, can specify device type or auto-detect"""
-    # Check if landscape
-    is_ipad, landscape = is_ipad_screenshot(image_path)
+    # Detect device type
+    detected_device, landscape = detect_device_type(image_path)
 
     # If landscape, output error message and exit program
     if landscape:
@@ -59,22 +68,31 @@ def process_auto(image_path, device=None, output_dir="output"):
         print("📱 Please try again with portrait screenshots")
         sys.exit(1)
 
-    # If device type is specified
+    # If device type is specified by user
     if device:
         if device == "ipad":
             print(f"🔄 Processing iPad screenshot: {image_path}")
             return process_ipad(image_path, output_dir=output_dir)
+        elif device == "ipad_mini":
+            print(f"🔄 Processing iPad mini screenshot: {image_path}")
+            return process_ipad_mini(image_path, output_dir=output_dir)
         else:  # device == "iphone"
             print(f"🔄 Processing iPhone screenshot: {image_path}")
             return process_iphone(image_path, output_dir=output_dir)
     else:
         # Auto-detect device type
-        if is_ipad:
+        if detected_device == 'ipad_mini':
+            print(f"🔍 Detected iPad mini screenshot (1488×2266): {image_path}")
+            return process_ipad_mini(image_path, output_dir=output_dir)
+        elif detected_device == 'ipad':
             print(f"🔍 Detected iPad screenshot: {image_path}")
             return process_ipad(image_path, output_dir=output_dir)
-        else:
+        elif detected_device == 'iphone':
             print(f"🔍 Detected iPhone screenshot: {image_path}")
             return process_iphone(image_path, output_dir=output_dir)
+        else:
+            print(f"❌ Unknown device type: {image_path}")
+            sys.exit(1)
 
 
 def process_batch(
@@ -117,10 +135,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  snap2store screenshot.png                  # Auto-detect device type and process single screenshot
-  snap2store screenshots/                    # Process all screenshots in the folder
-  snap2store -d iphone screenshot.png        # Specify as iPhone screenshot
-  snap2store -d ipad -o custom_output/ img/  # Specify as iPad screenshot and custom output directory
+  snap2store screenshot.png                      # Auto-detect device type and process single screenshot
+  snap2store screenshots/                        # Process all screenshots in the folder
+  snap2store -d iphone screenshot.png            # Specify as iPhone screenshot
+  snap2store -d ipad -o custom_output/ img/      # Specify as iPad screenshot and custom output directory
+  snap2store -d ipad_mini screenshot.png         # Specify as iPad mini screenshot
         """,
     )
 
@@ -128,7 +147,7 @@ Examples:
     parser.add_argument(
         "-d",
         "--device",
-        choices=["iphone", "ipad"],
+        choices=["iphone", "ipad", "ipad_mini"],
         help="Specify device type (auto-detect if not provided)",
     )
     parser.add_argument(

@@ -28,7 +28,11 @@ This tool solves these problems with one command:
 ## Installation
 
 ```bash
-pip install snap2store
+# Using pip
+pip install -U snap2store
+
+# Or using uv
+uv tool install snap2store
 ```
 
 ---
