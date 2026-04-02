@@ -63,6 +63,9 @@ snap2store -d iphone screenshot.png
 # Specify device type (iPad) and custom output directory
 snap2store -d ipad -o custom_output/ screenshot.png
 
+# Export transparent background PNG
+snap2store --transparent screenshot.png
+
 # Show help
 snap2store --help
 ```
@@ -70,7 +73,7 @@ snap2store --help
 ### Command Options
 
 ```
-usage: snap2store [-h] [-d {iphone,ipad}] [-o OUTPUT] [-v] input
+usage: snap2store [-h] [-d {iphone,ipad,ipad_mini}] [-o OUTPUT] [--transparent] [-v] input
 
 Snap2Store - Add device bezels to iOS/iPadOS screenshots to meet App Store requirements
 
@@ -79,10 +82,11 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -d {iphone,ipad}, --device {iphone,ipad}
+  -d {iphone,ipad,ipad_mini}, --device {iphone,ipad,ipad_mini}
                         Specify device type (auto-detect if not provided)
   -o OUTPUT, --output OUTPUT
                         Output directory (default: ./output/)
+  --transparent         Export with transparent background as PNG (default: white background JPG)
   -v, --version         show program's version number and exit
 
 Examples:
@@ -90,17 +94,44 @@ Examples:
   snap2store screenshots/                    # Process all screenshots in the folder
   snap2store -d iphone screenshot.png        # Specify as iPhone screenshot
   snap2store -d ipad -o custom_output/ img/  # Specify as iPad screenshot and custom output directory
+  snap2store -d ipad_mini screenshot.png     # Specify as iPad mini screenshot
+  snap2store --transparent screenshot.png    # Export transparent background as PNG
 ```
+
+---
+
+## Local Testing with uv
+
+Run from the project root:
+
+```bash
+# Install project dependencies into the uv environment
+uv sync
+
+# Check CLI options
+uv run snap2store --help
+
+# Test default output: white background JPG
+uv run snap2store path/to/screenshot.png
+
+# Test transparent output: transparent background PNG
+uv run snap2store --transparent path/to/screenshot.png
+```
+
+Expected results:
+
+- Default mode generates `output/<filename>_framed.jpg` with a white background
+- `--transparent` generates `output/<filename>_framed.png` with a transparent background
 
 ---
 
 ## Output
 
 - 📁 Processed files are saved in the `output/` folder  
-- 📝 File naming format: `original_filename_framed.jpg`  
+- 📝 File naming format: `original_filename_framed.jpg` or `original_filename_framed.png`  
 - 🎯 **App Store compliant**: correct dimensions and format  
-- 🖼️ JPEG quality: 85% with optimized compression  
-- 🎨 Transparency removed, converted to RGB  
+- 🖼️ Default export: white background JPG with quality 85 and optimized compression  
+- 🎨 `--transparent` export: transparent background PNG  
 
 ---
 

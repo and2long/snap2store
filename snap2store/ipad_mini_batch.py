@@ -11,8 +11,10 @@ PSD_FILE = os.path.join(BASE_DIR, "psd", "iPad-mini-Starlight-Portrait.psd")
 OUTPUT_DIR = "output"
 
 
-def process_image(screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR):
-    """Process single screenshot and generate JPEG image with device frame"""
+def process_image(
+    screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR, transparent=False
+):
+    """Process single screenshot and generate framed image"""
     # Open PSD
     psd = PSDImage.open(psd_path)
 
@@ -46,29 +48,31 @@ def process_image(screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR):
 
     # Create canvas
     canvas_size = psd.size
-    canvas = (
-        bg_img.copy()
-        if bg_img
-        else Image.new("RGBA", canvas_size, (255, 255, 255, 255))
-    )
+    if transparent:
+        canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    elif bg_img:
+        canvas = bg_img.copy()
+    else:
+        canvas = Image.new("RGBA", canvas_size, (255, 255, 255, 255))
 
     # Paste screenshot
     canvas.paste(screenshot, (sc_box[0], sc_box[1]), screenshot)
     # Paste Hardware layer
     canvas.alpha_composite(hw_img, dest=(hw_box[0], hw_box[1]))
 
-    # Remove alpha channel, convert to RGB
-    final_image = canvas.convert("RGB")
-
     # Output path
     filename = os.path.basename(screenshot_path)
     name, _ = os.path.splitext(filename)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_path = os.path.join(output_dir, f"{name}_framed.jpg")
+    extension = "png" if transparent else "jpg"
+    output_path = os.path.join(output_dir, f"{name}_framed.{extension}")
 
-    # Save as JPEG with compression
-    final_image.save(output_path, "JPEG", quality=85, optimize=True)
+    if transparent:
+        canvas.save(output_path, "PNG")
+    else:
+        final_image = canvas.convert("RGB")
+        final_image.save(output_path, "JPEG", quality=85, optimize=True)
     return output_path
 
 

@@ -1096,7 +1096,7 @@ wheels = [
 
 [[package]]
 name = "snap2store"
-version = "0.1.1"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "pillow", version = "10.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },

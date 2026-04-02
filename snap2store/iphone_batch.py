@@ -26,8 +26,10 @@ def apply_mask_to_image(image, mask):
     return masked_image
 
 
-def process_image(screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR):
-    """Process single screenshot and generate JPEG image with device frame"""
+def process_image(
+    screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR, transparent=False
+):
+    """Process single screenshot and generate framed image"""
     # Open PSD
     psd = PSDImage.open(psd_path)
 
@@ -61,7 +63,9 @@ def process_image(screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR):
 
     # Create canvas
     canvas_size = psd.size
-    if bg_img:
+    if transparent:
+        canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    elif bg_img:
         canvas = bg_img.convert("RGBA")
     else:
         canvas = Image.new("RGBA", canvas_size, (255, 255, 255, 255))
@@ -84,18 +88,19 @@ def process_image(screenshot_path, psd_path=PSD_FILE, output_dir=OUTPUT_DIR):
         # When no mask, directly paste screenshot as top layer
         canvas.alpha_composite(screenshot, dest=(sc_box[0], sc_box[1]))
 
-    # Remove alpha channel, convert to RGB
-    final_image = canvas.convert("RGB")
-
     # Output path
     filename = os.path.basename(screenshot_path)
     name, _ = os.path.splitext(filename)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    output_path = os.path.join(output_dir, f"{name}_framed.jpg")
+    extension = "png" if transparent else "jpg"
+    output_path = os.path.join(output_dir, f"{name}_framed.{extension}")
 
-    # Save as JPEG with compression
-    final_image.save(output_path, "JPEG", quality=85, optimize=True)
+    if transparent:
+        canvas.save(output_path, "PNG")
+    else:
+        final_image = canvas.convert("RGB")
+        final_image.save(output_path, "JPEG", quality=85, optimize=True)
     return output_path
 
 

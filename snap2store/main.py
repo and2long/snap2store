@@ -56,7 +56,7 @@ def detect_device_type(image_path):
         return 'unknown', False
 
 
-def process_auto(image_path, device=None, output_dir="output"):
+def process_auto(image_path, device=None, output_dir="output", transparent=False):
     """Automatically process screenshot, can specify device type or auto-detect"""
     # Detect device type
     detected_device, landscape = detect_device_type(image_path)
@@ -72,31 +72,46 @@ def process_auto(image_path, device=None, output_dir="output"):
     if device:
         if device == "ipad":
             print(f"🔄 Processing iPad screenshot: {image_path}")
-            return process_ipad(image_path, output_dir=output_dir)
+            return process_ipad(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
         elif device == "ipad_mini":
             print(f"🔄 Processing iPad mini screenshot: {image_path}")
-            return process_ipad_mini(image_path, output_dir=output_dir)
+            return process_ipad_mini(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
         else:  # device == "iphone"
             print(f"🔄 Processing iPhone screenshot: {image_path}")
-            return process_iphone(image_path, output_dir=output_dir)
+            return process_iphone(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
     else:
         # Auto-detect device type
         if detected_device == 'ipad_mini':
             print(f"🔍 Detected iPad mini screenshot (1488×2266): {image_path}")
-            return process_ipad_mini(image_path, output_dir=output_dir)
+            return process_ipad_mini(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
         elif detected_device == 'ipad':
             print(f"🔍 Detected iPad screenshot: {image_path}")
-            return process_ipad(image_path, output_dir=output_dir)
+            return process_ipad(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
         elif detected_device == 'iphone':
             print(f"🔍 Detected iPhone screenshot: {image_path}")
-            return process_iphone(image_path, output_dir=output_dir)
+            return process_iphone(
+                image_path, output_dir=output_dir, transparent=transparent
+            )
         else:
             print(f"❌ Unknown device type: {image_path}")
             sys.exit(1)
 
 
 def process_batch(
-    input_dir: str, device: Optional[str] = None, output_dir: str = "output"
+    input_dir: str,
+    device: Optional[str] = None,
+    output_dir: str = "output",
+    transparent: bool = False,
 ) -> List[str]:
     """Batch process all screenshots in folder"""
     processed_files = []
@@ -121,7 +136,7 @@ def process_batch(
     for i, f in enumerate(files, start=1):
         path = os.path.join(input_dir, f)
         print(f"⏳ [{i}/{total}] Processing: {f}")
-        output_path = process_auto(path, device, output_dir)
+        output_path = process_auto(path, device, output_dir, transparent=transparent)
         processed_files.append(output_path)
 
     print(f"✅ Batch processing completed! Processed {len(processed_files)} screenshots")
@@ -140,6 +155,7 @@ Examples:
   snap2store -d iphone screenshot.png            # Specify as iPhone screenshot
   snap2store -d ipad -o custom_output/ img/      # Specify as iPad screenshot and custom output directory
   snap2store -d ipad_mini screenshot.png         # Specify as iPad mini screenshot
+  snap2store --transparent screenshot.png        # Export transparent background as PNG
         """,
     )
 
@@ -153,6 +169,11 @@ Examples:
     parser.add_argument(
         "-o", "--output", default="output", help="Output directory (default: ./output/)"
     )
+    parser.add_argument(
+        "--transparent",
+        action="store_true",
+        help="Export with transparent background as PNG (default: white background JPG)",
+    )
     parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.1.0")
 
     args = parser.parse_args()
@@ -164,10 +185,17 @@ Examples:
     # Process input
     input_path = args.input
     if os.path.isdir(input_path):
-        process_batch(input_path, args.device, args.output)
+        process_batch(
+            input_path, args.device, args.output, transparent=args.transparent
+        )
     elif os.path.isfile(input_path):
         if input_path.lower().endswith((".png", ".jpg", ".jpeg")):
-            output_path = process_auto(input_path, args.device, args.output)
+            output_path = process_auto(
+                input_path,
+                args.device,
+                args.output,
+                transparent=args.transparent,
+            )
             print(f"✅ Processing completed: {output_path}")
         else:
             print(f"❌ Unsupported file type: {input_path}")

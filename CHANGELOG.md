@@ -1,3 +1,6 @@
+## [0.2.1] - 2026-04-02
+- Supports outputting images with transparent backgrounds and device borders.
+
 ## [0.2.0] - 2025-12-15
 - Supports processing screenshots of iPad Mini into images that comply with AppStore specifications
 
